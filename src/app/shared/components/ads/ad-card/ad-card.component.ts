@@ -47,14 +47,14 @@ export class AdCardComponent implements OnInit {
 
   goToAdPage(adId: number, adPublisherAlias: string, adPublisherId: number) {
     if (this.type === 'loggedInUserAd') {
-      window.location.href = `/compte/annonces/mon-annonce/${adId}`;
+      this.router.navigate(['/compte/annonces/mon-annonce', adId]);
     } else {
       if (!this.currentUserId) {
         // If no user is logged in and visits a seller's ad page
         // Store adPublisherId in sessionStorage
         sessionStorage.setItem('adPublisherId', adPublisherId.toString());
       }
-      window.location.href = `/annonce/${adPublisherAlias}/${adId}`;
+      this.router.navigate(['/annonce', adPublisherAlias, adId]);
     }
   }
 

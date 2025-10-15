@@ -1,11 +1,15 @@
 import { Injectable, ViewChild } from '@angular/core';
 import { BehaviorSubject, ReplaySubject } from 'rxjs';
-import { NgbCarousel, NgbSlideEvent, NgbSlideEventSource } from '@ng-bootstrap/ng-bootstrap';
+import {
+  NgbCarousel,
+  NgbSlideEvent,
+  NgbSlideEventSource,
+} from '@ng-bootstrap/ng-bootstrap';
 import { environment } from '../../../environments/environment.dev';
 import { Alert } from '../models/alert.model';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root',
 })
 /**
  * Service for managing display-related functionality such as screen size detection
@@ -42,9 +46,9 @@ export class DisplayManagementService {
 
   togglePaused() {
     if (this.paused) {
-        this.carousel!.cycle();
+      this.carousel!.cycle();
     } else {
-        this.carousel!.pause();
+      this.carousel!.pause();
     }
     this.paused = !this.paused;
   }
@@ -53,11 +57,16 @@ export class DisplayManagementService {
     if (
       this.unpauseOnArrow &&
       slideEvent.paused &&
-      (slideEvent.source === NgbSlideEventSource.ARROW_LEFT || slideEvent.source === NgbSlideEventSource.ARROW_RIGHT)
+      (slideEvent.source === NgbSlideEventSource.ARROW_LEFT ||
+        slideEvent.source === NgbSlideEventSource.ARROW_RIGHT)
     ) {
       this.togglePaused();
     }
-    if (this.pauseOnIndicator && !slideEvent.paused && slideEvent.source === NgbSlideEventSource.INDICATOR) {
+    if (
+      this.pauseOnIndicator &&
+      !slideEvent.paused &&
+      slideEvent.source === NgbSlideEventSource.INDICATOR
+    ) {
       this.togglePaused();
     }
   }
@@ -68,7 +77,7 @@ export class DisplayManagementService {
     const elementsArray = Array.from(elements);
     elementsArray.forEach((autofill: any) => {
       // Set accessToken for each mapbox-address-autofill element
-      autofill.accessToken = environment.mapboxToken;
+      //autofill.accessToken = environment.mapboxToken;
     });
   }
 
