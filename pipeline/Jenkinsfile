@@ -91,7 +91,7 @@ pipeline {
         stage('Create Version File') {
             steps {
                 script {
-                    echo 'Creating front-version.json file...'
+                    echo 'Creating frontend-version.json file...'
                     def versionInfo = [
                         name: env.APP_NAME,
                         version: env.APP_VERSION,
@@ -101,10 +101,10 @@ pipeline {
                         buildTime: new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC')),
                         artifactType: env.ARTIFACT_TYPE
                     ]
-                    writeJSON file: 'dist/front/browser/front-version.json', json: versionInfo, pretty: 4
+                    writeJSON file: 'dist/front/browser/frontend-version.json', json: versionInfo, pretty: 4
 
                     echo "Version file created:"
-                    sh 'cat dist/front/browser/front-version.json'
+                    sh 'cat dist/front/browser/frontend-version.json'
                 }
             }
         }
