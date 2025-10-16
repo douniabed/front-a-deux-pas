@@ -111,23 +111,11 @@ pipeline {
 
         stage('Package Artifact') {
             steps {
-                echo 'Creating optimized artifact (excluding node_modules)...'
+                echo 'Creating artifact...'
                 sh '''
-                    # Create artifact directory
-                    rm -rf artifact
-                    mkdir -p artifact
-
-                    # Copy built application (no node_modules or other unnecessary files)
-                    cp -r dist/front/browser/* artifact/
-
-                    # Create tar.gz archive
-                    tar -czf ${APP_NAME}-${APP_VERSION}.tar.gz -C artifact .
-
-                    # Verify artifact
+                    tar -czf ${APP_NAME}-${APP_VERSION}.tar.gz -C dist/front/browser .
                     echo "=== Artifact size ==="
                     ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
-                    echo "=== First 20 files in artifact ==="
-                    tar -tzf ${APP_NAME}-${APP_VERSION}.tar.gz | head -20
                 '''
             }
         }
@@ -141,7 +129,7 @@ pipeline {
                         nexusVersion: 'nexus3',
                         protocol: 'http',
                         nexusUrl: 'nexus.local:8085',
-                        groupId: 'com.adeuxpas',
+                        groupId: 'fr.a-deux-pas',
                         version: env.APP_VERSION,
                         repository: env.NEXUS_REPO,
                         credentialsId: 'nexus-credentials',
@@ -160,55 +148,55 @@ pipeline {
             }
         }
 
-        stage('Create Release') {
-            when {
-                branch 'main'
-            }
-            steps {
-                script {
-                    echo "Creating release for version ${env.APP_VERSION}..."
+        // stage('Create Release') {
+        //     when {
+        //         branch 'main'
+        //     }
+        //     steps {
+        //         script {
+        //             echo "Creating release for version ${env.APP_VERSION}..."
 
-                    // Increment version for next development cycle
-                    sh '''
-                        # Read current version without -SNAPSHOT
-                        CURRENT_VERSION=$(node -p "require('./package.json').version.replace(/-SNAPSHOT$/, '')")
+        //             // Increment version for next development cycle
+        //             sh '''
+        //                 # Read current version without -SNAPSHOT
+        //                 CURRENT_VERSION=$(node -p "require('./package.json').version.replace(/-SNAPSHOT$/, '')")
 
-                        # Increment patch version
-                        npm --no-git-tag-version version ${CURRENT_VERSION}
-                        npm --no-git-tag-version version patch
-                        NEW_VERSION=$(node -p "require('./package.json').version")
+        //                 # Increment patch version
+        //                 npm --no-git-tag-version version ${CURRENT_VERSION}
+        //                 npm --no-git-tag-version version patch
+        //                 NEW_VERSION=$(node -p "require('./package.json').version")
 
-                        # Add -SNAPSHOT suffix
-                        sed -i 's/"version": "'"${NEW_VERSION}"'"/"version": "'"${NEW_VERSION}-SNAPSHOT"'"/' package.json
+        //                 # Add -SNAPSHOT suffix
+        //                 sed -i 's/"version": "'"${NEW_VERSION}"'"/"version": "'"${NEW_VERSION}-SNAPSHOT"'"/' package.json
 
-                        echo "Version bumped to ${NEW_VERSION}-SNAPSHOT"
-                        cat package.json | grep version
-                    '''
+        //                 echo "Version bumped to ${NEW_VERSION}-SNAPSHOT"
+        //                 cat package.json | grep version
+        //             '''
 
-                    // Commit version bump directly to dev branch (no PR)
-                    sh '''
-                        git config user.name "Jenkins"
-                        git config user.email "jenkins@adeuxpas.com"
+        //             // Commit version bump directly to dev branch (no PR)
+        //             sh '''
+        //                 git config user.name "Jenkins"
+        //                 git config user.email "jenkins@adeuxpas.com"
 
-                        # Fetch latest dev branch
-                        git fetch origin dev:dev
+        //                 # Fetch latest dev branch
+        //                 git fetch origin dev:dev
 
-                        # Checkout dev branch
-                        git checkout dev
+        //                 # Checkout dev branch
+        //                 git checkout dev
 
-                        # Pull latest changes to ensure we're up to date
-                        git pull origin dev
+        //                 # Pull latest changes to ensure we're up to date
+        //                 git pull origin dev
 
-                        # Apply version changes
-                        git add package.json
-                        git commit -m "Bump version to $(node -p 'require(\"./package.json\").version') [skip ci]" || true
+        //                 # Apply version changes
+        //                 git add package.json
+        //                 git commit -m "Bump version to $(node -p 'require(\"./package.json\").version') [skip ci]" || true
 
-                        # Push to dev (will fail if there are conflicts, which is safer)
-                        git push origin dev || echo "Warning: Could not push to dev. Manual intervention may be required."
-                    '''
-                }
-            }
-        }
+        //                 # Push to dev (will fail if there are conflicts, which is safer)
+        //                 git push origin dev || echo "Warning: Could not push to dev. Manual intervention may be required."
+        //             '''
+        //         }
+        //     }
+        // }
     }
 
     post {
