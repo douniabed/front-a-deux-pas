@@ -97,14 +97,14 @@ pipeline {
                         version: env.APP_VERSION,
                         branch: env.BRANCH_NAME,
                         commit: env.GIT_COMMIT,
-                        buildNumber: env.BUILD_NUMBER,
+                        buildUrl: env.BUILD_URL,
                         buildTime: new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC')),
                         artifactType: env.ARTIFACT_TYPE
                     ]
-                    writeJSON file: 'dist/front-a-deux-pas/browser/version.json', json: versionInfo, pretty: 4
+                    writeJSON file: 'dist/front/browser/version.json', json: versionInfo, pretty: 4
 
                     echo "Version file created:"
-                    sh 'cat dist/front-a-deux-pas/browser/version.json'
+                    sh 'cat dist/front/browser/version.json'
                 }
             }
         }
@@ -114,16 +114,19 @@ pipeline {
                 echo 'Creating optimized artifact (excluding node_modules)...'
                 sh '''
                     # Create artifact directory
+                    rm -rf artifact
                     mkdir -p artifact
 
-                    # Copy only dist folder (no node_modules or other unnecessary files)
-                    cp -r dist/front-a-deux-pas/browser/* artifact/
+                    # Copy built application (no node_modules or other unnecessary files)
+                    cp -r dist/front/browser/* artifact/
 
                     # Create tar.gz archive
                     tar -czf ${APP_NAME}-${APP_VERSION}.tar.gz -C artifact .
 
                     # Verify artifact
+                    echo "=== Artifact size ==="
                     ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
+                    echo "=== First 20 files in artifact ==="
                     tar -tzf ${APP_NAME}-${APP_VERSION}.tar.gz | head -20
                 '''
             }
