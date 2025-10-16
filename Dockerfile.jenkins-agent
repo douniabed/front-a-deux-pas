@@ -1,0 +1,34 @@
+# Jenkins Agent with Cypress and Java 21 and Node 22
+# Based on cypress/browsers which includes Chrome, Firefox, and Edge for E2E testing
+# docker build -f Dockerfile.jenkins-agent -t java-node-cypress-agent:latest .
+
+FROM cypress/browsers:latest
+
+USER root
+
+# Install Java 21 from Debian repositories
+RUN apt-get update && \
+    apt-get install -y \
+    openjdk-21-jdk \
+    maven \
+    git \
+    curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set Java environment variables
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Verify installations
+RUN echo "Node version:" && node --version && \
+    echo "npm version:" && npm --version && \
+    echo "Java version:" && java -version && \
+    echo "Maven version:" && mvn --version && \
+    echo "Cypress version:" && npx cypress --version
+
+# Switch back to default user
+USER node
+WORKDIR /home/node
+
+CMD ["/bin/bash"]
