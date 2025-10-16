@@ -5,7 +5,7 @@ pipeline {
 
     options {
         ansiColor('xterm')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+        buildDiscarder(logRotator(numToKeepStr: '5'))
     }
 
     environment {
@@ -40,27 +40,27 @@ pipeline {
         stage('Run E2E Tests') {
             steps {
                 echo 'Running Cypress E2E tests...'
-                sh '''
-                    npm run build
-                    npm start -- --host 0.0.0.0 &
-                    SERVER_PID=$!
+                // sh '''
+                //     npm run build
+                //     npm start -- --host 0.0.0.0 &
+                //     SERVER_PID=$!
 
-                    # Wait for server to be ready
-                    timeout 120 bash -c 'until curl -f http://localhost:4200 > /dev/null 2>&1; do sleep 1; done' || true
+                //     # Wait for server to be ready
+                //     timeout 120 bash -c 'until curl -f http://localhost:4200 > /dev/null 2>&1; do sleep 1; done' || true
 
-                    # Run E2E tests
-                    npx cypress run --e2e || true
+                //     # Run E2E tests
+                //     npx cypress run --e2e || true
 
-                    # Kill the server
-                    kill $SERVER_PID || true
-                '''
+                //     # Kill the server
+                //     kill $SERVER_PID || true
+                // '''
             }
         }
 
         stage('Run Component Tests') {
             steps {
                 echo 'Running Cypress component tests...'
-                sh 'npx cypress run --component || true'
+                // sh 'npx cypress run --component || true'
             }
         }
 

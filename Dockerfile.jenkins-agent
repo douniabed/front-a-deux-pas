@@ -20,15 +20,27 @@ RUN apt-get update && \
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
-# Verify installations
-RUN echo "Node version:" && node --version && \
-    echo "npm version:" && npm --version && \
-    echo "Java version:" && java -version && \
-    echo "Maven version:" && mvn --version && \
-    echo "Cypress version:" && npx cypress --version
+# Set Cypress cache directory to /home/node/.cache
+ENV CYPRESS_CACHE_FOLDER=/home/node/.cache/Cypress
+
+# Create Cypress cache directory with proper permissions
+RUN mkdir -p /home/node/.cache/Cypress && \
+    chown -R node:node /home/node/.cache
 
 # Switch back to default user
 USER node
 WORKDIR /home/node
+
+# Verify installations (don't verify Cypress here as it will be installed via npm ci)
+RUN echo "Node version:" && node --version && \
+    echo "npm version:" && npm --version
+
+# Switch to root for final verification
+USER root
+RUN echo "Java version:" && java -version && \
+    echo "Maven version:" && mvn --version
+
+# Switch back to node user
+USER node
 
 CMD ["/bin/bash"]
