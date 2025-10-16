@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'java-node'
-    }
+    agent none
 
     options {
         ansiColor('xterm')
@@ -17,6 +15,9 @@ pipeline {
 
     stages {
         stage('Checkout') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 echo "Checking out code from ${env.BRANCH_NAME} branch"
                 checkout scm
@@ -24,6 +25,9 @@ pipeline {
         }
 
         stage('Install Dependencies') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 echo 'Installing npm dependencies...'
                 sh 'npm ci'
@@ -31,6 +35,9 @@ pipeline {
         }
 
         stage('Build') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 echo 'Building application...'
                 sh 'npm run build:ci'
@@ -38,6 +45,9 @@ pipeline {
         }
 
         stage('Run E2E Tests') {
+            agent {
+                label 'cypress-agent'
+            }
             steps {
                 echo 'Running Cypress E2E tests...'
                 sh '''
@@ -58,6 +68,9 @@ pipeline {
         }
 
         stage('Run Component Tests') {
+            agent {
+                label 'cypress-agent'
+            }
             steps {
                 echo 'Running Cypress component tests...'
                 sh 'npx cypress run --component || true'
@@ -65,6 +78,9 @@ pipeline {
         }
 
         stage('Determine Version') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 script {
                     def packageJson = readJSON file: 'package.json'
@@ -89,6 +105,9 @@ pipeline {
         }
 
         stage('Create Version File') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 script {
                     echo 'Creating version.json file...'
@@ -110,6 +129,9 @@ pipeline {
         }
 
         stage('Package Artifact') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 echo 'Creating optimized artifact (excluding node_modules)...'
                 sh '''
@@ -130,23 +152,40 @@ pipeline {
         }
 
         stage('Upload to Nexus') {
+            agent {
+                label 'java-node'
+            }
             steps {
                 script {
                     echo "Uploading artifact to Nexus ${env.ARTIFACT_TYPE} repository..."
 
-                    def artifactPath = "${env.APP_NAME}-${env.APP_VERSION}.tar.gz"
-                    def nexusPath = "${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/com/adeuxpas/${env.APP_NAME}/${env.APP_VERSION}/${env.APP_NAME}-${env.APP_VERSION}.tar.gz"
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'nexus.local:8085',
+                        groupId: 'com.adeuxpas',
+                        version: env.APP_VERSION,
+                        repository: env.NEXUS_REPO,
+                        credentialsId: 'nexus-credentials',
+                        artifacts: [
+                            [
+                                artifactId: env.APP_NAME,
+                                classifier: '',
+                                file: "${env.APP_NAME}-${env.APP_VERSION}.tar.gz",
+                                type: 'tar.gz'
+                            ]
+                        ]
+                    )
 
-                    sh """
-                        curl -v -u \${NEXUS_CREDENTIALS} --upload-file ${artifactPath} ${nexusPath}
-                    """
-
-                    echo "Artifact uploaded successfully to: ${nexusPath}"
+                    echo "Artifact uploaded successfully to Nexus"
                 }
             }
         }
 
         stage('Create Release') {
+            agent {
+                label 'java-node'
+            }
             when {
                 branch 'main'
             }
