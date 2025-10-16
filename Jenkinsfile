@@ -1,5 +1,7 @@
 pipeline {
-    agent none
+    agent {
+        label 'java-node-cypress'
+    }
 
     options {
         ansiColor('xterm')
@@ -15,9 +17,6 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 echo "Checking out code from ${env.BRANCH_NAME} branch"
                 checkout scm
@@ -25,9 +24,6 @@ pipeline {
         }
 
         stage('Install Dependencies') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 echo 'Installing npm dependencies...'
                 sh 'npm ci'
@@ -35,9 +31,6 @@ pipeline {
         }
 
         stage('Build') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 echo 'Building application...'
                 sh 'npm run build:ci'
@@ -45,9 +38,6 @@ pipeline {
         }
 
         stage('Run E2E Tests') {
-            agent {
-                label 'cypress-agent'
-            }
             steps {
                 echo 'Running Cypress E2E tests...'
                 sh '''
@@ -68,9 +58,6 @@ pipeline {
         }
 
         stage('Run Component Tests') {
-            agent {
-                label 'cypress-agent'
-            }
             steps {
                 echo 'Running Cypress component tests...'
                 sh 'npx cypress run --component || true'
@@ -78,9 +65,6 @@ pipeline {
         }
 
         stage('Determine Version') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 script {
                     def packageJson = readJSON file: 'package.json'
@@ -105,9 +89,6 @@ pipeline {
         }
 
         stage('Create Version File') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 script {
                     echo 'Creating version.json file...'
@@ -129,9 +110,6 @@ pipeline {
         }
 
         stage('Package Artifact') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 echo 'Creating optimized artifact (excluding node_modules)...'
                 sh '''
@@ -152,9 +130,6 @@ pipeline {
         }
 
         stage('Upload to Nexus') {
-            agent {
-                label 'java-node'
-            }
             steps {
                 script {
                     echo "Uploading artifact to Nexus ${env.ARTIFACT_TYPE} repository..."
@@ -183,9 +158,6 @@ pipeline {
         }
 
         stage('Create Release') {
-            agent {
-                label 'java-node'
-            }
             when {
                 branch 'main'
             }
