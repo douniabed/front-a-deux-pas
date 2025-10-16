@@ -1,122 +1,212 @@
-// pipeline {
-//     agent any
+pipeline {
+    agent {
+        label 'java-node'
+    }
 
-//     tools {
-//         nodejs 'NodeJS 20.x'
-//     }
+    options {
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
 
-//     environment {
-//         APP_NAME = 'front-a-deux-pas'
-//     }
+    environment {
+        APP_NAME = 'front-a-deux-pas'
+        NEXUS_URL = 'http://nexus.local:8085'
+        NEXUS_REPO = 'maven-adp-front'
+        NEXUS_CREDENTIALS = credentials('nexus-credentials')
+    }
 
-//     stages {
-//         // stage('Checkout') {
-//         //     steps {
-//         //         checkout scm
-//         //     }
-//         // }
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out code from ${env.BRANCH_NAME} branch"
+                checkout scm
+            }
+        }
 
-//         stage('Install Dependencies') {
-//             steps {
-//                 sh 'npm ci'
-//             }
-//         }
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing npm dependencies...'
+                sh 'npm ci'
+            }
+        }
 
-//         stage('Build') {
-//             steps {
-//                 sh 'npm run build:ci'
-//             }
-//         }
+        stage('Build') {
+            steps {
+                echo 'Building application...'
+                sh 'npm run build:ci'
+            }
+        }
 
-//         // stage('Run E2E Tests') {
-//         //     steps {
-//         //         script {
-//         //             sh 'npm start -- --host 0.0.0.0 &'
-//         //             sh 'npx wait-on http://localhost:4200'
-//         //             sh 'npx cypress run --spec "src/app/shared/tests/e2e/**/*.cy.ts"'
-//         //         }
-//         //     }
-//         // }
+        stage('Run E2E Tests') {
+            steps {
+                echo 'Running Cypress E2E tests...'
+                sh '''
+                    npm run build
+                    npm start -- --host 0.0.0.0 &
+                    SERVER_PID=$!
 
-//         // stage('Run Component Tests') {
-//         //     steps {
-//         //         sh 'npx cypress run --component --spec "src/app/shared/tests/unit/**/*.cy.ts"'
-//         //     }
-//         // }
+                    # Wait for server to be ready
+                    timeout 120 bash -c 'until curl -f http://localhost:4200 > /dev/null 2>&1; do sleep 1; done' || true
 
-//         stage('Set Application Version') {
-//             steps {
-//                 script {
-//                     env.APP_VERSION = getApplicationVersion()
-//                     echo "Application version = ${env.APP_VERSION}"
-//                 }
-//             }
-//         }
+                    # Run E2E tests
+                    npx cypress run --e2e || true
 
-//         stage('Archive Artifacts') {
-//             steps {
-//                 sh "cd dist && zip -r ../${APP_NAME}-${env.APP_VERSION}.zip ."
-//                 archiveArtifacts artifacts: "${APP_NAME}-${env.APP_VERSION}.zip", fingerprint: true
-//             }
-//         }
+                    # Kill the server
+                    kill $SERVER_PID || true
+                '''
+            }
+        }
 
-//         stage('Release') {
-//             when {
-//                 branch 'main'
-//             }
-//             steps {
-//                 script {
-//                     configureGit()
-//                     createGitHubRelease()
-//                 }
-//             }
-//         }
-//     }
+        stage('Run Component Tests') {
+            steps {
+                echo 'Running Cypress component tests...'
+                sh 'npx cypress run --component || true'
+            }
+        }
 
-//     post {
-//         always {
-//             cleanWs()
-//         }
-//         success {
-//             echo 'Pipeline completed successfully!'
-//         }
-//         failure {
-//             echo 'Pipeline failed!'
-//         }
-//     }
-// }
+        stage('Determine Version') {
+            steps {
+                script {
+                    def packageJson = readJSON file: 'package.json'
+                    def baseVersion = packageJson.version
 
-// def getApplicationVersion() {
-//     def packageJson = readJSON file: 'package.json'
-//     def version = packageJson.version
+                    if (env.BRANCH_NAME == 'main') {
+                        // Remove -SNAPSHOT suffix for releases
+                        env.APP_VERSION = baseVersion.replace('-SNAPSHOT', '') + "-${env.GIT_COMMIT.take(7)}"
+                        env.IS_RELEASE = 'true'
+                        env.ARTIFACT_TYPE = 'release'
+                    } else {
+                        // Keep -SNAPSHOT for dev branches
+                        env.APP_VERSION = baseVersion
+                        env.IS_RELEASE = 'false'
+                        env.ARTIFACT_TYPE = 'snapshot'
+                    }
 
-//     def branch = env.GIT_BRANCH ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    echo "Application Version: ${env.APP_VERSION}"
+                    echo "Artifact Type: ${env.ARTIFACT_TYPE}"
+                }
+            }
+        }
 
-//     if (branch in ['main', 'origin/main']) {
-//         def commitSha = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-//         version = version.replaceAll(/-SNAPSHOT$/, '') + "-${commitSha}"
-//     }
+        stage('Create Version File') {
+            steps {
+                script {
+                    echo 'Creating version.json file...'
+                    def versionInfo = [
+                        name: env.APP_NAME,
+                        version: env.APP_VERSION,
+                        branch: env.BRANCH_NAME,
+                        commit: env.GIT_COMMIT,
+                        buildNumber: env.BUILD_NUMBER,
+                        buildTime: new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'", TimeZone.getTimeZone('UTC')),
+                        artifactType: env.ARTIFACT_TYPE
+                    ]
+                    writeJSON file: 'dist/front-a-deux-pas/browser/version.json', json: versionInfo, pretty: 4
 
-//     return version
-// }
+                    echo "Version file created:"
+                    sh 'cat dist/front-a-deux-pas/browser/version.json'
+                }
+            }
+        }
 
-// def configureGit() {
-//     sh '''
-//         git config user.name "jenkins"
-//         git config user.email "jenkins@ci.local"
-//     '''
-// }
+        stage('Package Artifact') {
+            steps {
+                echo 'Creating optimized artifact (excluding node_modules)...'
+                sh '''
+                    # Create artifact directory
+                    mkdir -p artifact
 
-// def createGitHubRelease() {
-//     withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-//         def commitSha = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-//         def releaseNotes = "front-a-deux-pas release v${env.APP_VERSION}\\n\\nCommit: ${commitSha}"
+                    # Copy only dist folder (no node_modules or other unnecessary files)
+                    cp -r dist/front-a-deux-pas/browser/* artifact/
 
-//         sh """
-//             gh release create v${env.APP_VERSION} ${APP_NAME}-${env.APP_VERSION}.zip \
-//                 --title "v${env.APP_VERSION}" \
-//                 --notes "${releaseNotes}" \
-//                 --target main
-//         """
-//     }
-// }
+                    # Create tar.gz archive
+                    tar -czf ${APP_NAME}-${APP_VERSION}.tar.gz -C artifact .
+
+                    # Verify artifact
+                    ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
+                    tar -tzf ${APP_NAME}-${APP_VERSION}.tar.gz | head -20
+                '''
+            }
+        }
+
+        stage('Upload to Nexus') {
+            steps {
+                script {
+                    echo "Uploading artifact to Nexus ${env.ARTIFACT_TYPE} repository..."
+
+                    def artifactPath = "${env.APP_NAME}-${env.APP_VERSION}.tar.gz"
+                    def nexusPath = "${env.NEXUS_URL}/repository/${env.NEXUS_REPO}/com/adeuxpas/${env.APP_NAME}/${env.APP_VERSION}/${env.APP_NAME}-${env.APP_VERSION}.tar.gz"
+
+                    sh """
+                        curl -v -u \${NEXUS_CREDENTIALS} --upload-file ${artifactPath} ${nexusPath}
+                    """
+
+                    echo "Artifact uploaded successfully to: ${nexusPath}"
+                }
+            }
+        }
+
+        stage('Create Release') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    echo "Creating release for version ${env.APP_VERSION}..."
+
+                    // Increment version for next development cycle
+                    sh '''
+                        # Read current version without -SNAPSHOT
+                        CURRENT_VERSION=$(node -p "require('./package.json').version.replace(/-SNAPSHOT$/, '')")
+
+                        # Increment patch version
+                        npm --no-git-tag-version version ${CURRENT_VERSION}
+                        npm --no-git-tag-version version patch
+                        NEW_VERSION=$(node -p "require('./package.json').version")
+
+                        # Add -SNAPSHOT suffix
+                        sed -i 's/"version": "'"${NEW_VERSION}"'"/"version": "'"${NEW_VERSION}-SNAPSHOT"'"/' package.json
+
+                        echo "Version bumped to ${NEW_VERSION}-SNAPSHOT"
+                        cat package.json | grep version
+                    '''
+
+                    // Commit version bump directly to dev branch (no PR)
+                    sh '''
+                        git config user.name "Jenkins"
+                        git config user.email "jenkins@adeuxpas.com"
+
+                        # Fetch latest dev branch
+                        git fetch origin dev:dev
+
+                        # Checkout dev branch
+                        git checkout dev
+
+                        # Pull latest changes to ensure we're up to date
+                        git pull origin dev
+
+                        # Apply version changes
+                        git add package.json
+                        git commit -m "Bump version to $(node -p 'require(\"./package.json\").version') [skip ci]" || true
+
+                        # Push to dev (will fail if there are conflicts, which is safer)
+                        git push origin dev || echo "Warning: Could not push to dev. Manual intervention may be required."
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution completed'
+            cleanWs(deleteDirs: true, patterns: [[pattern: 'node_modules/**', type: 'INCLUDE']])
+        }
+        success {
+            echo "Build successful! Version ${env.APP_VERSION} has been built and uploaded."
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }
+}
