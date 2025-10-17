@@ -98,7 +98,7 @@ export class StyleGuideComponent {
   // Card data
   dummyArticle: any = {
     title: 'Coque de téléphone',
-    image: '/assets/pictures/mobile.webp',
+    image: 'assets/pictures/mobile.webp',
     seller: 'Eri',
     price: '30'
   };
