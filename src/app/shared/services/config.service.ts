@@ -24,8 +24,9 @@ export class ConfigService {
     try {
       // Fetch config.json from assets folder
       // Add timestamp to prevent caching issues
+      // Use relative path to work with dynamic base href
       this.config = await firstValueFrom(
-        this.http.get<AppConfig>(`/a-deux-pas/assets/config.json?t=${Date.now()}`)
+        this.http.get<AppConfig>(`assets/config.json?t=${Date.now()}`)
       );
     } catch (error) {
       console.error('Failed to load configuration:', error);

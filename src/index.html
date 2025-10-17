@@ -3,7 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <title>A deux pas</title>
-    <base href="/a-deux-pas/" />
+    <script>
+      (function() {
+        // Dynamically determine base href from current path
+        var path = window.location.pathname;
+
+        // Extract base path from URL (e.g., /a-deux-pas-prod/, /a-deux-pas-dev/, or just /)
+        // Match pattern: everything up to and including the first directory after domain
+        var match = path.match(/^(\/[^\/]+\/)/);
+        var baseHref = match && match[1] ? match[1] : '/';
+
+        // Set the base href dynamically
+        document.write('<base href="' + baseHref + '" />');
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <script
