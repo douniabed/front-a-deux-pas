@@ -2,10 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, catchError, tap } from 'rxjs';
-import { AUTH_BASE_URL } from '../utils/constants/util-constants';
+import { AUTH_PATH } from '../utils/constants/util-constants';
 import { jwtDecode } from 'jwt-decode';
 import { HandleErrorService } from './handle-error.service';
 import { Credentials } from '../models/user/credentials.model';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root',
@@ -18,25 +19,30 @@ export class AuthService {
   constructor(
     public http: HttpClient,
     private router: Router,
-    private handleErrorService: HandleErrorService
+    private handleErrorService: HandleErrorService,
+    private configService: ConfigService
   ) {}
 
+  private get authBaseUrl(): string {
+    return `${this.configService.apiUrl}${AUTH_PATH}`;
+  }
+
   validateCredentials(email: string, password: string): Observable<boolean> {
-    return this.http.post<boolean>(`${AUTH_BASE_URL}/check-credentials`,
+    return this.http.post<boolean>(`${this.authBaseUrl}/check-credentials`,
       { email, password }
     ).pipe(
         catchError(this.handleErrorService.handleError))
   }
 
   isEmailAddressAlreadyExist(email: string): Observable<boolean> {
-    return this.http.post<boolean>(`${AUTH_BASE_URL}/check-email`,
+    return this.http.post<boolean>(`${this.authBaseUrl}/check-email`,
       email
     ).pipe(
         catchError(this.handleErrorService.handleError))
   }
 
   isAliasAlreadyExist(alias: string): Observable<boolean> {
-    return this.http.get<boolean>(`${AUTH_BASE_URL}/check-alias`, {
+    return this.http.get<boolean>(`${this.authBaseUrl}/check-alias`, {
       params: { alias }
     }).pipe(
         catchError(this.handleErrorService.handleError))
@@ -57,7 +63,7 @@ export class AuthService {
   auth(credentials: Credentials, endpoint: string): Observable<any> {
     return this.http
       .post<any>(
-        `${AUTH_BASE_URL}/${endpoint}`,
+        `${this.authBaseUrl}/${endpoint}`,
         credentials,
         { responseType: 'text' as 'json' } // Response type expected
       )

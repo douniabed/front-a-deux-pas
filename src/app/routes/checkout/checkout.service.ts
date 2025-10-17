@@ -4,9 +4,10 @@ import { MeetingRequest } from '../../shared/models/meeting/meeting-request.mode
 import { HttpClient } from '@angular/common/http';
 import { HandleErrorService } from '../../shared/services/handle-error.service';
 import {
-  MEETING_BASE_URL,
-  PAYMENT_BASE_URL,
+  MEETING_PATH,
+  PAYMENT_PATH,
 } from '../../shared/utils/constants/util-constants';
+import { ConfigService } from '../../shared/services/config.service';
 
 @Injectable({
   providedIn: 'root',
@@ -23,8 +24,17 @@ export class CheckoutService {
 
   constructor(
     private http: HttpClient,
-    private handleErrorService: HandleErrorService
+    private handleErrorService: HandleErrorService,
+    private configService: ConfigService
   ) {}
+
+  private get meetingBaseUrl(): string {
+    return `${this.configService.apiUrl}${MEETING_PATH}`;
+  }
+
+  private get paymentBaseUrl(): string {
+    return `${this.configService.apiUrl}${PAYMENT_PATH}`;
+  }
 
   updateStep(step: number) {
     this.stepSource.next(step);
@@ -57,7 +67,7 @@ export class CheckoutService {
   ): Observable<MeetingRequest> {
     return this.http
       .post<MeetingRequest>(
-        `${MEETING_BASE_URL}/initialize`,
+        `${this.meetingBaseUrl}/initialize`,
         proposedMeeting
       )
       .pipe(catchError(this.handleErrorService.handleError));
@@ -65,7 +75,7 @@ export class CheckoutService {
 
   createPaymentIntent(token: any, meetingId: any): Observable<any> {
     return this.http
-      .post<any>(`${PAYMENT_BASE_URL}/create-payment-intent`, {
+      .post<any>(`${this.paymentBaseUrl}/create-payment-intent`, {
         amount: this.getCheckoutAd().price * 100, // initial amount is in cents
         currency: 'eur',
         type: 'card',

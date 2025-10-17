@@ -1,20 +1,38 @@
 import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { catchError, Observable, throwError } from "rxjs";
-import { API_URL } from "../utils/constants/util-constants";
 import { AuthService } from "../services/auth.service";
+import { ConfigService } from "../services/config.service";
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService
+  ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Skip interceptor for config.json requests to avoid circular dependency
+    if (req.url.includes('/assets/config.json')) {
+      return next.handle(req);
+    }
+
     // Get the auth token from the service.
     const authToken = localStorage.getItem('token');
+
+    // Try to get API URL, but handle case where config isn't loaded yet
+    let apiUrl: string;
+    try {
+      apiUrl = this.configService.apiUrl;
+    } catch (error) {
+      // Config not loaded yet, skip this request
+      return next.handle(req);
+    }
+
     // Clone the request and replace the original headers with
     // cloned headers, updated with the authorization.
-    if (req.url.startsWith(API_URL)) {
+    if (req.url.startsWith(apiUrl)) {
       if (authToken) {
         const authReq = req.clone({
           setHeaders: {
