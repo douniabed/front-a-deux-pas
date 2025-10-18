@@ -19,7 +19,8 @@ export class DropzoneConfigService {
         clickable: true,
         maxFiles: 1,
         resizeWidth: 230,
-        resizeHeight: 230
+        resizeHeight: 230,
+        autoProcessQueue: false  // Disable auto-upload; form handles upload on submit
     };
 
     getConfig(width?: number, height?: number): DropzoneConfigInterface {
