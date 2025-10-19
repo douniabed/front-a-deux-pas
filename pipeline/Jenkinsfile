@@ -23,6 +23,32 @@ pipeline {
             }
         }
 
+        stage('Determine Version') {
+            steps {
+                script {
+                    def packageJson = readJSON file: 'package.json'
+                    def baseVersion = packageJson.version
+
+                    if (env.BRANCH_NAME == 'main') {
+                        // Remove -SNAPSHOT suffix for releases
+                        env.APP_VERSION = baseVersion.replace('-SNAPSHOT', '') + "-${env.GIT_COMMIT.take(7)}"
+                        env.IS_RELEASE = 'true'
+                        env.ARTIFACT_TYPE = 'release'
+                    } else {
+                        // Keep -SNAPSHOT for dev branches
+                        env.APP_VERSION = baseVersion
+                        env.IS_RELEASE = 'false'
+                        env.ARTIFACT_TYPE = 'snapshot'
+                    }
+
+                    echo "Application Version: ${env.APP_VERSION}"
+                    echo "Artifact Type: ${env.ARTIFACT_TYPE}"
+                    // Set build display name with version and commit ID
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} - ${env.APP_VERSION} (${env.GIT_COMMIT.take(7)})"
+                }
+            }
+        }
+        
         stage('Install Dependencies') {
             steps {
                 echo 'Installing npm dependencies...'
@@ -61,32 +87,6 @@ pipeline {
             steps {
                 echo 'Running Cypress component tests...'
                 // sh 'npx cypress run --component || true'
-            }
-        }
-
-        stage('Determine Version') {
-            steps {
-                script {
-                    def packageJson = readJSON file: 'package.json'
-                    def baseVersion = packageJson.version
-
-                    if (env.BRANCH_NAME == 'main') {
-                        // Remove -SNAPSHOT suffix for releases
-                        env.APP_VERSION = baseVersion.replace('-SNAPSHOT', '') + "-${env.GIT_COMMIT.take(7)}"
-                        env.IS_RELEASE = 'true'
-                        env.ARTIFACT_TYPE = 'release'
-                    } else {
-                        // Keep -SNAPSHOT for dev branches
-                        env.APP_VERSION = baseVersion
-                        env.IS_RELEASE = 'false'
-                        env.ARTIFACT_TYPE = 'snapshot'
-                    }
-
-                    echo "Application Version: ${env.APP_VERSION}"
-                    echo "Artifact Type: ${env.ARTIFACT_TYPE}"
-                    // Set build display name with version and commit ID
-                    currentBuild.displayName = "#${env.BUILD_NUMBER} - ${env.APP_VERSION} (${env.GIT_COMMIT.take(7)})"
-                }
             }
         }
 
