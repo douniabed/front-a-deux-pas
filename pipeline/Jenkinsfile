@@ -218,6 +218,19 @@ pipeline {
     post {
         always {
             echo 'Pipeline execution completed'
+
+            // Archive Cypress screenshots and videos
+            script {
+                if (fileExists('cypress/screenshots')) {
+                    archiveArtifacts artifacts: 'cypress/screenshots/**/*.png', allowEmptyArchive: true, fingerprint: true
+                    echo 'Cypress screenshots archived'
+                }
+                if (fileExists('cypress/videos')) {
+                    archiveArtifacts artifacts: 'cypress/videos/**/*.mp4', allowEmptyArchive: true, fingerprint: true
+                    echo 'Cypress videos archived'
+                }
+            }
+
             cleanWs(deleteDirs: true, patterns: [[pattern: 'node_modules/**', type: 'INCLUDE']])
         }
         success {
