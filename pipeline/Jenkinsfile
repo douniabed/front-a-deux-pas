@@ -219,6 +219,14 @@ pipeline {
         always {
             echo 'Pipeline execution completed'
 
+            // Archive build artifact
+            script {
+                if (fileExists("${env.APP_NAME}-${env.APP_VERSION}.tar.gz")) {
+                    archiveArtifacts artifacts: "${env.APP_NAME}-${env.APP_VERSION}.tar.gz", fingerprint: true
+                    echo "Build artifact ${env.APP_NAME}-${env.APP_VERSION}.tar.gz archived"
+                }
+            }
+
             // Archive Cypress screenshots and videos
             script {
                 if (fileExists('cypress/screenshots')) {
