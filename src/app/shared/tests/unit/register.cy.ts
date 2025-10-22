@@ -28,8 +28,8 @@ context('create account testing', () => {
   it('should be possible to submit the form', function() {
 
     // it should be possible to select a profile picture
-    cy.get('form');
-    cy.get('.dropzone-add').click().selectFile('cypress/fixtures/images/pic-test-1-min.webp', { action: 'drag-drop' });
+    cy.get('form').should('exist');
+    cy.get('.dropzone-add').should('be.visible').click().selectFile('cypress/fixtures/images/pic-test-1-min.webp', { action: 'drag-drop' });
     cy.get('.dz-preview').should('contain', 'pic-test-1-min.webp');
 
     // it should be possible to enter user information

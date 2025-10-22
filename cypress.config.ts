@@ -7,6 +7,7 @@ export default defineConfig({
       bundler: "webpack",
     },
     specPattern: "src/app/shared/tests/unit/**/*.cy.ts",
+    testIsolation: false,
   },
 
   e2e: {
@@ -14,5 +15,6 @@ export default defineConfig({
       // implement node event listeners here
     },
     specPattern: "src/app/shared/tests/e2e/**/*.cy.ts",
+    testIsolation: false,
   },
 });
