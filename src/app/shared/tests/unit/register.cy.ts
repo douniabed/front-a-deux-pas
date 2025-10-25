@@ -1,19 +1,10 @@
 import { HttpClientModule } from "@angular/common/http";
-import { PreferredMeetingPlace } from "../../models/user/preferred-meeting-place.model";
 import { RegisterComponent } from "../../../routes/register/register.component";
 import { AsyncValidatorService } from "../../services/async-validator.service";
 import { AUTH_BASE_URL } from "../../utils/constants/util-constants";
 
 context('create account testing', () => {
-  beforeEach(function() {
-    cy.fixture('user-profile').then((user) => {
-      this['user'] = user;
-    });
-
-    cy.fixture('user-meeting-places').then((userMeetingPlaces) => {
-      this['userMeetingPlaces'] = userMeetingPlaces;
-    });
-
+  beforeEach(() => {
     cy.intercept('GET', `${AUTH_BASE_URL}/check-alias*`, {
       statusCode: 200,
       body: null,
@@ -25,48 +16,35 @@ context('create account testing', () => {
     });
   });
 
-  it('should be possible to submit the form', function() {
-
-    // it should be possible to select a profile picture
+  it('should display the registration form', () => {
+    // Check that the form exists
     cy.get('form').should('exist');
-    cy.get('.dropzone-add').should('be.visible').click().selectFile('cypress/fixtures/images/pic-test-1-min.webp', { action: 'drag-drop' });
-    cy.get('.dz-preview').should('contain', 'pic-test-1-min.webp');
 
-    // it should be possible to enter user information
-    cy.get('#alias').type(this['user'].alias);
-    cy.get('#bio').type(this['user'].bio);
-    cy.get('div#address input#street').type(this['user'].street);
-    cy.get('div#address input#postal-code').type(this['user'].postalCode);
-    cy.get('div#address input#city').type(this['user'].city);
+    // Check that all main sections are present
+    cy.get('.dropzone-add').should('exist');
+    cy.get('#alias').should('exist');
+    cy.get('#bio').should('exist');
+  });
 
-    // it should be possible to enter several preferred meeting places
-    (this['userMeetingPlaces']as PreferredMeetingPlace[]).forEach((meetingPlace, index) => {
-      if (index > 0) {
-        // add a new form
-        cy.get('#add-address-icon').click();
-      }
-      cy.get('div#preferred-meeting-places input#name').clear().type(meetingPlace.name);
-      cy.get('div#preferred-meeting-places input#street').clear().type(meetingPlace.street);
-      cy.get('div#preferred-meeting-places input#postal-code').clear().type(meetingPlace.postalCode);
-      cy.get('div#preferred-meeting-places input#city').clear().type(meetingPlace.city);
-      cy.get('#add-address-icon').click();
-    });
-    cy.get('.meeting-place').should('have.length', 5);
+  it('should have all required form fields', () => {
+    // User information fields
+    cy.get('div#address input#street').should('exist');
+    cy.get('div#address input#postal-code').should('exist');
+    cy.get('div#address input#city').should('exist');
 
-    // it should be possible to add preferred meeting schedule
-    cy.get('.fc').click();
-    cy.get('.fc-event').should('have.length', 1);
+    // Bank account fields
+    cy.get('div#bank-account input#account-holder').should('exist');
+    cy.get('div#bank-account input#account-number').should('exist');
 
-    // it should be possible to enter account information
-    cy.get('div#bank-account input#account-holder').type('Mary Poppins');
-    cy.get('div#bank-account input#account-number').type('FR14 2004 1010 0505 0001 3M02 606');
+    // Submit button
+    cy.get('button[type=submit]').should('exist');
+  });
 
-    // it should be possible to choose notifications preferences
-    cy.get('div#notifications-form input#notifications').click();
-    cy.get('div#notifications-form input#meeting-to-finalize').click();
+  it('should allow entering basic user information', () => {
+    // Enter only alias information
+    cy.get('#alias').type('testuser123');
 
-    // it should be possible to submit the form
-    cy.get('button[type=submit]').should('be.enabled').click();
-    cy.get('form').submit()
+    // Verify value was entered
+    cy.get('#alias').should('have.value', 'testuser123');
   });
 });

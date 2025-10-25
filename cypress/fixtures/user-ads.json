@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "category": "Électronique",
+    "subcategory": "Ordinateur",
+    "title": "MacBook Pro 2021",
+    "articleDescription": "MacBook Pro M1 en excellent état, vendu avec chargeur et housse",
+    "articleState": "Très bon",
+    "price": 1200,
+    "publicationDate": "2024-01-15",
+    "status": "ACTIVE",
+    "sellerAlias": "supercalifragilisticexpialidocious",
+    "images": []
+  },
+  {
+    "id": 2,
+    "category": "Mobilier",
+    "subcategory": "Canapé",
+    "title": "Canapé 3 places",
+    "articleDescription": "Canapé en tissu gris, très confortable",
+    "articleState": "Bon",
+    "price": 300,
+    "publicationDate": "2024-02-01",
+    "status": "ACTIVE",
+    "sellerAlias": "supercalifragilisticexpialidocious",
+    "images": []
+  }
+]

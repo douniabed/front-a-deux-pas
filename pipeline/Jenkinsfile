@@ -163,56 +163,6 @@ pipeline {
                 }
             }
         }
-
-        // stage('Create Release') {
-        //     when {
-        //         branch 'main'
-        //     }
-        //     steps {
-        //         script {
-        //             echo "Creating release for version ${env.APP_VERSION}..."
-
-        //             // Increment version for next development cycle
-        //             sh '''
-        //                 # Read current version without -SNAPSHOT
-        //                 CURRENT_VERSION=$(node -p "require('./package.json').version.replace(/-SNAPSHOT$/, '')")
-
-        //                 # Increment patch version
-        //                 npm --no-git-tag-version version ${CURRENT_VERSION}
-        //                 npm --no-git-tag-version version patch
-        //                 NEW_VERSION=$(node -p "require('./package.json').version")
-
-        //                 # Add -SNAPSHOT suffix
-        //                 sed -i 's/"version": "'"${NEW_VERSION}"'"/"version": "'"${NEW_VERSION}-SNAPSHOT"'"/' package.json
-
-        //                 echo "Version bumped to ${NEW_VERSION}-SNAPSHOT"
-        //                 cat package.json | grep version
-        //             '''
-
-        //             // Commit version bump directly to dev branch (no PR)
-        //             sh '''
-        //                 git config user.name "Jenkins"
-        //                 git config user.email "jenkins@adeuxpas.com"
-
-        //                 # Fetch latest dev branch
-        //                 git fetch origin dev:dev
-
-        //                 # Checkout dev branch
-        //                 git checkout dev
-
-        //                 # Pull latest changes to ensure we're up to date
-        //                 git pull origin dev
-
-        //                 # Apply version changes
-        //                 git add package.json
-        //                 git commit -m "Bump version to $(node -p 'require(\"./package.json\").version') [skip ci]" || true
-
-        //                 # Push to dev (will fail if there are conflicts, which is safer)
-        //                 git push origin dev || echo "Warning: Could not push to dev. Manual intervention may be required."
-        //             '''
-        //         }
-        //     }
-        // }
     }
 
     post {

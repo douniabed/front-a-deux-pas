@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "adId": 3,
+    "adTitle": "iPhone 13",
+    "buyerAlias": "supercalifragilisticexpialidocious",
+    "sellerAlias": "tech-seller",
+    "proposedDate": "2024-03-15T14:00:00",
+    "meetingPlace": "Place de la République, 75003 Paris",
+    "status": "PROPOSED",
+    "price": 500,
+    "paymentMethod": "CARD"
+  },
+  {
+    "id": 2,
+    "adId": 7,
+    "adTitle": "Table basse vintage",
+    "buyerAlias": "furniture-buyer",
+    "sellerAlias": "supercalifragilisticexpialidocious",
+    "proposedDate": "2024-03-18T10:30:00",
+    "meetingPlace": "Gare de Lyon, 75012 Paris",
+    "status": "CONFIRMED",
+    "price": 80,
+    "paymentMethod": "CASH"
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "id": 5,
+    "category": "Sport",
+    "subcategory": "Vélo",
+    "title": "VTT tout terrain",
+    "articleDescription": "VTT en très bon état, roues neuves",
+    "articleState": "Très bon",
+    "price": 450,
+    "publicationDate": "2024-01-20",
+    "status": "ACTIVE",
+    "sellerAlias": "john-doe",
+    "images": []
+  },
+  {
+    "id": 8,
+    "category": "Livres",
+    "subcategory": "Roman",
+    "title": "Collection Harry Potter",
+    "articleDescription": "Tous les livres de la saga en français",
+    "articleState": "Comme neuf",
+    "price": 60,
+    "publicationDate": "2024-02-05",
+    "status": "ACTIVE",
+    "sellerAlias": "book-lover",
+    "images": []
+  }
+]
