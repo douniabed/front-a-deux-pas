@@ -136,7 +136,7 @@ pipeline {
                     ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
                 '''
                 // Stash files needed for Docker build
-                stash includes: 'dist/**/*,Dockerfile,nginx.conf', name: 'docker-build-files'
+                stash includes: 'dist/**/*,Dockerfile,nginx.conf,.dockerignore', name: 'docker-build-files'
             }
         }
 
