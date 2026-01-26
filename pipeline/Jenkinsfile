@@ -106,7 +106,7 @@ pipeline {
             }
         }
 
-        stage('Create Version File') {
+        stage('Package Artifact') {
             steps {
                 script {
                     echo 'Creating frontend-version.json file...'
@@ -120,15 +120,8 @@ pipeline {
                         artifactType: env.ARTIFACT_TYPE
                     ]
                     writeJSON file: 'dist/front/browser/assets/frontend-version.json', json: versionInfo, pretty: 4
-
-                    echo "Version file created:"
                     sh 'cat dist/front/browser/assets/frontend-version.json'
                 }
-            }
-        }
-
-        stage('Package Artifact') {
-            steps {
                 echo 'Creating artifact...'
                 sh '''
                     tar -czf ${APP_NAME}-${APP_VERSION}.tar.gz -C dist/front/browser .
