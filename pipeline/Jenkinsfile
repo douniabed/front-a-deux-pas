@@ -136,7 +136,7 @@ pipeline {
                     ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
                 '''
                 // Stash files needed for Docker build
-                stash includes: 'dist/**/*,Dockerfile,nginx.conf,.dockerignore', name: 'docker-build-files'
+                stash includes: 'dist/**/*,docker/**,.dockerignore', name: 'docker-build-files'
             }
         }
 
@@ -176,9 +176,14 @@ pipeline {
                 unstash 'docker-build-files'
                 script {
                     def latestTag = 'latest'
+                    // Clean up all old Docker images for this repo before build
+                    sh """
+                        docker images ${DOCKER_IMAGE} -q | xargs -r docker rmi -f || true
+                    """
                     echo "Building Docker image ${env.DOCKER_IMAGE}:${env.APP_VERSION} and ${latestTag}..."
                     sh """
                         docker build \
+                            -f docker/Dockerfile \
                             -t ${DOCKER_IMAGE}:${APP_VERSION} \
                             -t ${DOCKER_IMAGE}:${latestTag} \
                             .
@@ -204,12 +209,6 @@ pipeline {
                         docker logout
                     """
                     echo "Docker image pushed successfully to DockerHub"
-
-                    // Clean up Docker images to free disk space
-                    sh """
-                        docker rmi ${DOCKER_IMAGE}:${APP_VERSION} || true
-                        docker rmi ${DOCKER_IMAGE}:${latestTag} || true
-                    """
                 }
             }
         }
