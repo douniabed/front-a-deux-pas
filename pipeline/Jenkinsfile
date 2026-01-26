@@ -173,16 +173,9 @@ pipeline {
                 label 'docker'
             }
             steps {
-                // Retrieve files from previous stages
                 unstash 'docker-build-files'
-                sh '''
-                    echo "=== Workspace contents after unstash ==="
-                    ls -la
-                    echo "=== dist directory ==="
-                    ls -la dist/front/browser/ || echo "dist/front/browser not found"
-                '''
                 script {
-                    def latestTag = (env.IS_RELEASE == 'true') ? 'latest' : 'latest-snapshot'
+                    def latestTag = 'latest'
                     echo "Building Docker image ${env.DOCKER_IMAGE}:${env.APP_VERSION} and ${latestTag}..."
                     sh """
                         docker build \
@@ -202,7 +195,7 @@ pipeline {
             }
             steps {
                 script {
-                    def latestTag = (env.IS_RELEASE == 'true') ? 'latest' : 'latest-snapshot'
+                    def latestTag = 'latest'
                     echo "Pushing Docker image to DockerHub..."
                     sh """
                         echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
