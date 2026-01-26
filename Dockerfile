@@ -1,45 +1,19 @@
-# Build stage
-
-# Uses a lightweight Node.js image for the build phase
-FROM node:20-slim AS build
-
-# Sets the working directory in the container
-WORKDIR /app
-
-# Copies package.json and package-lock.json
-# This allows us to install dependencies before copying the rest of the code
-COPY package*.json ./
-
-# Installs all dependencies
-# npm ci is faster and more reliable than npm install for CI/CD environments
-RUN npm ci
-
-# Copies the rest of the project files into the container
-COPY . .
-
-ARG MAPBOX_TOKEN
-ARG STRIPE_TOKEN
-# Replaces placeholders with actual tokens and runs the build script for the Angular application
-# --configuration production ensures the app is built with production optimizations
-RUN sed -i "s|MAPBOX_TOKEN_PLACEHOLDER|${MAPBOX_TOKEN}|g" src/environments/environment.prod.ts && \
-    sed -i "s|STRIPE_TOKEN_PLACEHOLDER|${STRIPE_TOKEN}|g" src/environments/environment.prod.ts && \
-    npm run build -- --configuration production
-
-# Production stage
+# Production image using pre-built artifacts from CI pipeline
 
 # Uses a lightweight Nginx Alpine image to serve the application
 FROM nginx:alpine
 
 # Create a non-root user
 RUN adduser -D -h /home/app -u 1000 app
-USER app
 WORKDIR /home/app
 
-# Copies the build files from the previous stage to the app home
-COPY --from=build /app/dist/front /home/app
+# Copies the pre-built files from CI pipeline to the app home
+COPY --chown=app:app dist/front/browser /home/app
 
 # Copies the custom Nginx configuration file to app home
-COPY nginx.conf /home/app/nginx.conf
+COPY --chown=app:app nginx.conf /home/app/nginx.conf
+
+USER app
 
 # Indicates that the container will listen on port 1080
 EXPOSE 1080

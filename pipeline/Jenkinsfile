@@ -13,6 +13,8 @@ pipeline {
         NEXUS_URL = 'http://nexus.local:8085'
         NEXUS_REPO = 'maven-adp-front'
         NEXUS_CREDENTIALS = credentials('nexus-credentials')
+        DOCKER_IMAGE = 'douniabed/front-a-deux-pas'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
     }
 
     stages {
@@ -133,6 +135,8 @@ pipeline {
                     echo "=== Artifact size ==="
                     ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
                 '''
+                // Stash files needed for Docker build
+                stash includes: 'dist/front/browser/**,Dockerfile,nginx.conf', name: 'docker-build-files'
             }
         }
 
@@ -160,6 +164,53 @@ pipeline {
                     )
 
                     echo "Artifact uploaded successfully to Nexus"
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            agent {
+                label 'docker'
+            }
+            steps {
+                // Retrieve files from previous stages
+                unstash 'docker-build-files'
+                script {
+                    def latestTag = (env.IS_RELEASE == 'true') ? 'latest' : 'latest-snapshot'
+                    echo "Building Docker image ${env.DOCKER_IMAGE}:${env.APP_VERSION} and ${latestTag}..."
+                    sh """
+                        docker build \
+                            -t ${DOCKER_IMAGE}:${APP_VERSION} \
+                            -t ${DOCKER_IMAGE}:${latestTag} \
+                            .
+                    """
+                    env.DOCKER_LATEST_TAG = latestTag
+                    echo "Docker image built successfully"
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            agent {
+                label 'docker'
+            }
+            steps {
+                script {
+                    def latestTag = (env.IS_RELEASE == 'true') ? 'latest' : 'latest-snapshot'
+                    echo "Pushing Docker image to DockerHub..."
+                    sh """
+                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                        docker push ${DOCKER_IMAGE}:${APP_VERSION}
+                        docker push ${DOCKER_IMAGE}:${latestTag}
+                        docker logout
+                    """
+                    echo "Docker image pushed successfully to DockerHub"
+
+                    // Clean up Docker images to free disk space
+                    sh """
+                        docker rmi ${DOCKER_IMAGE}:${APP_VERSION} || true
+                        docker rmi ${DOCKER_IMAGE}:${latestTag} || true
+                    """
                 }
             }
         }
