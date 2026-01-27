@@ -11,7 +11,7 @@ WORKDIR /home/app
 COPY --chown=app:app dist/front/browser /home/app
 
 # Copies the custom Nginx configuration file to app home
-COPY --chown=app:app docker/nginx.conf /home/app/nginx.conf
+COPY --chown=app:app docker/nginx.conf /home/nginx.conf
 
 USER app
 
@@ -19,4 +19,4 @@ USER app
 EXPOSE 1080
 
 # Runs Nginx
-CMD ["nginx", "-c", "/home/app/nginx.conf", "-p", "/home/app"]
+CMD ["nginx", "-c", "/home/nginx.conf", "-p", "/home/app"]
