@@ -94,7 +94,9 @@ export class AdFormComponent implements AfterViewChecked {
             }
           } else {
             const adId = Number(this.route.snapshot.paramMap.get('adId'));
-            this.getAd(adId);
+            if (!isNaN(adId) && adId > 0) {
+              this.getAd(adId);
+            }
           }
         });
     }
