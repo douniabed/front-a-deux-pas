@@ -1,6 +1,6 @@
 {
   "name": "front-a-deux-pas",
-  "version": "2.0.0-SNAPSHOT",
+  "version": "3.0.0-SNAPSHOT",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
