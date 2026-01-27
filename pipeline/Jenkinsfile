@@ -228,7 +228,7 @@ pipeline {
                 script {
                     catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                         echo "Triggering deployment to DEV environment..."
-                        build job: 'deploy-a-deux-pas/main',
+                        build job: 'github/deploy-a-deux-pas/main',
                             wait: true,
                             parameters: [
                                 string(name: 'TARGET_ENV', value: 'DEV'),
