@@ -106,7 +106,7 @@ export class AdPageComponent implements OnInit {
         this.adService.isOnSellerAdPageUnLogged(true);
       }
       if (isLoggedIn && this.adPublisherId == this.loggedInUserId) {
-        this.router.navigate(['compte/annonces/mon-annonce/', adId]);
+        this.router.navigate(['/compte/annonces/mon-annonce/', adId]);
       }
     });
   }

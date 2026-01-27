@@ -25,7 +25,7 @@
       </li>
       <li routerLinkActive="active-icon" [routerLinkActiveOptions]="{exact: true}"
       [hidden]="isRegistrationPage || onSellerAdPageUnlogged">
-        <a routerLink="compte/annonces" class="navbar-icon">
+        <a routerLink="/compte/annonces" class="navbar-icon">
           <img class="icon" src="assets/icons/navbar/adds.webp" alt="icône 'Annonces'" />
           Annonces
         </a>
@@ -38,7 +38,7 @@
       </li>
       <li routerLinkActive="active-icon" [routerLinkActiveOptions]="{exact: true}"
       [hidden]="isRegistrationPage || onSellerAdPageUnlogged">
-        <a routerLink="compte/favoris" class="navbar-icon">
+        <a routerLink="/compte/favoris" class="navbar-icon">
           <img class="icon" src="assets/icons/navbar/favorites.webp" alt="icône 'Favoris'" />
           Favoris
         </a>
@@ -66,7 +66,7 @@
   <div id="account-menu-items">
     <div id="account-menu-items-wrapper">
       @for (route of accountRoutes[0].children; track $index) {
-      <a [routerLink]="'compte/' + route.path" class="account-menu-item" (click)="toggleAccountMenuState()">{{
+      <a [routerLink]="'/compte/' + route.path" class="account-menu-item" (click)="toggleAccountMenuState()">{{
         route.title }}</a>
       }
       <div id="account-menu-separator">
@@ -90,7 +90,7 @@
           <span class="desktop-logo">PAS</span>
         </div>
       </a>
-      <button routerLink="annonce/creation" class="btn-sell" id="desktop-sell-icon"
+      <button routerLink="/annonce/creation" class="btn-sell" id="desktop-sell-icon"
       [hidden]="isRegistrationPage || onSellerAdPageUnlogged">
         <img class="add-icon" src="assets/icons/buttons/add-white.webp" alt="icône plus"/>
         Vendre
@@ -104,13 +104,13 @@
           </a>
         </li>
         <li routerLinkActive="active-icon" [routerLinkActiveOptions]="{exact: true}">
-          <a routerLink="compte/annonces" class="navbar-icon">
+          <a routerLink="/compte/annonces" class="navbar-icon">
             <img class="add-icon" src="assets/icons/navbar/adds.webp" alt="icône 'Annonces'" />
             Annonces
           </a>
         </li>
         <li routerLinkActive="active-icon" [routerLinkActiveOptions]="{exact: true}">
-          <a routerLink="compte/favoris" class="navbar-icon">
+          <a routerLink="/compte/favoris" class="navbar-icon">
             <img class="add-icon" src="assets/icons/navbar/favorites.webp" alt="icône 'Favoris'" />
             Favoris
           </a>
@@ -124,7 +124,7 @@
           <div id="dropdown-content">
             <ul>
               @for (route of accountRoutes[0].children; track $index) {
-              <a [routerLink]="'compte/' + route.path" class="account-menu-item" (click)="toggleAccountMenuState()">
+              <a [routerLink]="'/compte/' + route.path" class="account-menu-item" (click)="toggleAccountMenuState()">
                 {{ route.title }}
               </a>
               }

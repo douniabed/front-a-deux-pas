@@ -317,7 +317,7 @@ export class AdFormComponent implements AfterViewChecked {
     this.adformService.createAd(adData).subscribe({
       next: (ad: AdDetails) => {
         this.isSubmitting = false;
-        this.router.navigate(['compte/annonces/mon-annonce/', ad.id]);
+        this.router.navigate(['/compte/annonces/mon-annonce/', ad.id]);
         setTimeout(() => {
           this.displayManagementService.displayAlert(
             ALERTS.AD_CREATED_SUCCESS
@@ -343,7 +343,7 @@ export class AdFormComponent implements AfterViewChecked {
     this.adformService.updateAd(adData).subscribe({
       next: (ad: AdDetails) => {
         this.isSubmitting = false;
-        this.router.navigate(['compte/annonces/mon-annonce/', ad.id]);
+        this.router.navigate(['/compte/annonces/mon-annonce/', ad.id]);
         setTimeout(() => {
           this.displayManagementService.displayAlert(
             ALERTS.AD_UPDATED_SUCCESS

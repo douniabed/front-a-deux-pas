@@ -56,7 +56,7 @@ export class NavbarComponent implements OnInit {
   }
 
   openModalOrSell() {
-    this.isUserLoggedIn ? this.router.navigate(['annonce/creation']) : this.openModal();
+    this.isUserLoggedIn ? this.router.navigate(['/annonce/creation']) : this.openModal();
   }
 
   ngOnDestroy() {
