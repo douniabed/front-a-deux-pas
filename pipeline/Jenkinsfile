@@ -175,7 +175,7 @@ pipeline {
                     """
                     echo "Building Docker image ${env.DOCKER_IMAGE}:${env.APP_VERSION} and ${latestTag}..."
                     sh """
-                        docker build \
+                        docker build --no-cache \
                             -f docker/Dockerfile \
                             -t ${DOCKER_IMAGE}:${APP_VERSION} \
                             -t ${DOCKER_IMAGE}:${latestTag} \
