@@ -15,6 +15,7 @@ pipeline {
         NEXUS_CREDENTIALS = credentials('nexus-credentials')
         DOCKER_IMAGE = 'douniabed/front-a-deux-pas'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        SONAR_TOKEN = credentials('sonarcloud-token')
     }
 
     stages {
@@ -62,6 +63,26 @@ pipeline {
             steps {
                 echo 'Building application...'
                 sh 'npm run build:ci'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                echo 'Running unit tests with coverage...'
+                sh 'npm run test:ci'
+            }
+        }
+
+        stage('Sonar') {
+            steps {
+                echo 'Running SonarCloud analysis...'
+                withSonarQubeEnv('SonarCloud') {
+                    sh '''
+                        npx sonar-scanner \
+                            -Dsonar.host.url=https://sonarcloud.io \
+                            -Dsonar.token=${SONAR_TOKEN}
+                    '''
+                }
             }
         }
 
