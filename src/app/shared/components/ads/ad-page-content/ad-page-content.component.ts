@@ -68,7 +68,13 @@ export class AdPageComponent implements OnInit {
 
   ngOnInit(): void {
     window.scrollTo(0, 0);
-    const adId: number | null = Number(this.route.snapshot.paramMap.get('adId'));
+    const adId: number = Number(this.route.snapshot.paramMap.get('adId'));
+
+    // Guard against invalid adId
+    if (isNaN(adId) || adId <= 0) {
+      return;
+    }
+
     this.adPublisherId = Number(sessionStorage.getItem('adPublisherId'));
     this.loggedInUserId = Number(localStorage.getItem('userId'));
     this.onLoggedInUserAd = !this.route.snapshot.paramMap.has('sellerAlias');
@@ -106,7 +112,7 @@ export class AdPageComponent implements OnInit {
         this.adService.isOnSellerAdPageUnLogged(true);
       }
       if (isLoggedIn && this.adPublisherId == this.loggedInUserId) {
-        this.router.navigate(['compte/annonces/mon-annonce/', adId]);
+        this.router.navigate(['/compte/annonces/mon-annonce/', adId]);
       }
     });
   }

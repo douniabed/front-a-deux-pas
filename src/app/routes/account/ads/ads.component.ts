@@ -51,6 +51,6 @@ export class AdsComponent implements OnInit {
   }
 
   createNewAd(): void {
-    this.router.navigate(['annonce/creation']);
+    this.router.navigate(['/annonce/creation']);
   }
 }

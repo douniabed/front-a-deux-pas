@@ -700,8 +700,8 @@ $form-switch-focus-color: white;
 
 // Checkbox and radio
 $form-check-input-checked-color: white;
-$form-check-input-checked-bg-image: url("../assets/icons/check.webp");
-$form-check-radio-checked-bg-image: url("../assets/icons/check.webp");
+$form-check-input-checked-bg-image: url("/assets/icons/check.webp");
+$form-check-radio-checked-bg-image: url("/assets/icons/check.webp");
 
 .form-check-input[type="checkbox"],
 .form-check-input[type="radio"] {

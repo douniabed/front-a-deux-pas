@@ -94,7 +94,9 @@ export class AdFormComponent implements AfterViewChecked {
             }
           } else {
             const adId = Number(this.route.snapshot.paramMap.get('adId'));
-            this.getAd(adId);
+            if (!isNaN(adId) && adId > 0) {
+              this.getAd(adId);
+            }
           }
         });
     }
@@ -317,7 +319,7 @@ export class AdFormComponent implements AfterViewChecked {
     this.adformService.createAd(adData).subscribe({
       next: (ad: AdDetails) => {
         this.isSubmitting = false;
-        this.router.navigate(['compte/annonces/mon-annonce/', ad.id]);
+        this.router.navigate(['/compte/annonces/mon-annonce/', ad.id]);
         setTimeout(() => {
           this.displayManagementService.displayAlert(
             ALERTS.AD_CREATED_SUCCESS
@@ -343,7 +345,7 @@ export class AdFormComponent implements AfterViewChecked {
     this.adformService.updateAd(adData).subscribe({
       next: (ad: AdDetails) => {
         this.isSubmitting = false;
-        this.router.navigate(['compte/annonces/mon-annonce/', ad.id]);
+        this.router.navigate(['/compte/annonces/mon-annonce/', ad.id]);
         setTimeout(() => {
           this.displayManagementService.displayAlert(
             ALERTS.AD_UPDATED_SUCCESS

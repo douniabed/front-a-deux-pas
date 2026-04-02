@@ -65,14 +65,14 @@ export class CtaMyAdComponent implements OnInit {
   }
 
   goToSellerProfile(): void {
-    this.router.navigate(['profil', this.buyerAlias]);
+    this.router.navigate(['/profil', this.buyerAlias]);
   }
 
   deleteAd(): void {
     if (this.myAd?.id) {
       this.ctaMyAdService.deleteAd(this.adId).subscribe({
         next: () => {
-          this.router.navigate(['compte/annonces']);
+          this.router.navigate(['/compte/annonces']);
           setTimeout(() => {
             this.displayManagementService.displayAlert(
               ALERTS.AD_DELETED_SUCCESS,

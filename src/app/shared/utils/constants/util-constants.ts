@@ -6,7 +6,7 @@
  * and use its apiUrl property to build full endpoint URLs
  */
 
-const API_BASE_URL = 'http://localhost:8081/api';
+const API_BASE_URL = '/api';
 
 export const AUTH_PATH = '/auth';
 export const USER_PATH = '/users';

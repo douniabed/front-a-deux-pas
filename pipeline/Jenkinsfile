@@ -13,6 +13,9 @@ pipeline {
         NEXUS_URL = 'http://nexus.local:8085'
         NEXUS_REPO = 'maven-adp-front'
         NEXUS_CREDENTIALS = credentials('nexus-credentials')
+        DOCKER_IMAGE = 'douniabed/front-a-deux-pas'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        SONAR_TOKEN = credentials('sonarcloud-token')
     }
 
     stages {
@@ -63,6 +66,26 @@ pipeline {
             }
         }
 
+        stage('Unit Tests') {
+            steps {
+                echo 'Running unit tests with coverage...'
+                sh 'npm run test:ci'
+            }
+        }
+
+        stage('Sonar') {
+            steps {
+                echo 'Running SonarCloud analysis...'
+                withSonarQubeEnv('SonarCloud') {
+                    sh '''
+                        npx sonar-scanner \
+                            -Dsonar.host.url=https://sonarcloud.io \
+                            -Dsonar.token=${SONAR_TOKEN}
+                    '''
+                }
+            }
+        }
+
         stage('Run E2E Tests') {
             when {
                 environment name: 'ARTIFACT_TYPE', value: 'snapshot'
@@ -104,7 +127,7 @@ pipeline {
             }
         }
 
-        stage('Create Version File') {
+        stage('Package Artifact') {
             steps {
                 script {
                     echo 'Creating frontend-version.json file...'
@@ -118,21 +141,16 @@ pipeline {
                         artifactType: env.ARTIFACT_TYPE
                     ]
                     writeJSON file: 'dist/front/browser/assets/frontend-version.json', json: versionInfo, pretty: 4
-
-                    echo "Version file created:"
                     sh 'cat dist/front/browser/assets/frontend-version.json'
                 }
-            }
-        }
-
-        stage('Package Artifact') {
-            steps {
                 echo 'Creating artifact...'
                 sh '''
                     tar -czf ${APP_NAME}-${APP_VERSION}.tar.gz -C dist/front/browser .
                     echo "=== Artifact size ==="
                     ls -lh ${APP_NAME}-${APP_VERSION}.tar.gz
                 '''
+                // Stash files needed for Docker build
+                stash includes: 'dist/**/*,docker/**,.dockerignore', name: 'docker-build-files'
             }
         }
 
@@ -160,6 +178,65 @@ pipeline {
                     )
 
                     echo "Artifact uploaded successfully to Nexus"
+                }
+            }
+        }
+
+        stage('Docker Build/Push') {
+            agent {
+                label 'docker'
+            }
+            steps {
+                unstash 'docker-build-files'
+                script {
+                    def latestTag = 'latest'
+                    // Clean up all old Docker images for this repo before build
+                    sh """
+                        docker images ${DOCKER_IMAGE} -q | xargs -r docker rmi -f || true
+                    """
+                    echo "Building Docker image ${env.DOCKER_IMAGE}:${env.APP_VERSION} and ${latestTag}..."
+                    sh """
+                        docker build --no-cache \
+                            -f docker/Dockerfile \
+                            -t ${DOCKER_IMAGE}:${APP_VERSION} \
+                            -t ${DOCKER_IMAGE}:${latestTag} \
+                            .
+                    """
+                    env.DOCKER_LATEST_TAG = latestTag
+                    echo "Docker image built successfully"
+                }
+
+                script {
+                    def latestTag = 'latest'
+                    echo "Pushing Docker image to DockerHub..."
+                    sh """
+                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                        docker push ${DOCKER_IMAGE}:${APP_VERSION}
+                        docker push ${DOCKER_IMAGE}:${latestTag}
+                        docker logout
+                    """
+                    echo "Docker image pushed successfully to DockerHub"
+                }
+            }
+        }
+
+        stage('Deploy to DEV') {
+            when {
+                environment name: 'ARTIFACT_TYPE', value: 'snapshot'
+            }
+            steps {
+                script {
+                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                        echo "Triggering deployment to DEV environment..."
+                        build job: 'github/deploy-a-deux-pas/main',
+                            wait: true,
+                            parameters: [
+                                string(name: 'TARGET_ENV', value: 'DEV'),
+                                string(name: 'FRONT_APP_VERSION', value: env.APP_VERSION),
+                                string(name: 'BACK_APP_VERSION', value: '')
+                            ]
+                        echo "Deployment to DEV completed successfully"
+                    }
                 }
             }
         }

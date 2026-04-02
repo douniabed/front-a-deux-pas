@@ -1,6 +1,6 @@
 {
   "name": "front-a-deux-pas",
-  "version": "2.0.0-SNAPSHOT",
+  "version": "3.0.0-SNAPSHOT",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -8,7 +8,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:ci": "ng test --watch=false --code-coverage --source-map true --browsers=ChromeHeadles",
+    "test:ci": "ng test --watch=false --code-coverage --source-map true --browsers=ChromeHeadlessCI",
     "build:ci": "ng build",
     "build:local": "ng build --configuration=local"
   },
